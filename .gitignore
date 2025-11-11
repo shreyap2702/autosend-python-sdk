@@ -1,0 +1,49 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---- Virtual Environments ----
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ---- Packaging ----
+build/
+dist/
+*.egg-info/
+*.egg
+
+# ---- Logs & Caches ----
+*.log
+*.out
+*.err
+*.tmp
+*.cache/
+.pytest_cache/
+.ruff_cache/
+
+# ---- IDE & Editor ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ---- Dependency / Lock files ----
+# uv handles this but we’ll ignore local metadata
+.uv/
+uv.lock
+
+# ---- Test & Coverage ----
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
