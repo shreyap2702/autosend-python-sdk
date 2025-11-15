@@ -3,7 +3,7 @@ Sending module for the Autosend SDK.
 Provides methods for sending single and bulk emails via the Autosend API.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 from autosend.client import AutosendClient
 
 
