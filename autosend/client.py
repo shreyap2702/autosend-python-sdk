@@ -19,7 +19,7 @@ class AutosendClient:
         >>> autosend.sending.send_email({...})
     """
 
-    def __init__(self, api_key: str, base_url: str = "https://api.autosend.com") -> None:
+    def __init__(self, api_key: str, base_url: str = "https://api.autosend.com/v1") -> None:
         """
         Initialize the Autosend API client.
 

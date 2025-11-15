@@ -34,17 +34,40 @@ class Contacts:
         self._client = client
 
     # 1. Create Contact
-    def create_contact(self, data: Dict[str, Any]) -> Any:
+    def create_contact(
+        self,
+        email: str,
+        first_name: str,
+        last_name: str,
+        user_id: str | None = None,
+        custom_fields: Dict[str, Any] | None = None,
+    ) -> Any:
         """
         Create a new contact using /contacts.
 
         Args:
-            data: Contact payload as defined by the Autosend API.
+            email: The contact's email address.
+            first_name: First name of the contact.
+            last_name: Last name of the contact.
+            user_id: Optional user identifier for the contact.
+            custom_fields: Optional dictionary of additional fields defined in Autosend.
 
         Returns:
             JSON response from the API.
         """
-        return self._client.post("/contacts", data=data)
+        payload = {
+            "email": email,
+            "firstName": first_name,
+            "lastName": last_name,
+        }
+
+        if user_id is not None:
+            payload["userId"] = user_id
+
+        if custom_fields is not None:
+            payload["customFields"] = custom_fields
+
+        return self._client.post("/contacts", data=payload)
 
     # 2. Upsert Contact (create or update by email)
     def upsert_contact(self, data: Dict[str, Any]) -> Any:
@@ -85,7 +108,7 @@ class Contacts:
             JSON response from the API.
         """
         return self._client.get(f"/contacts/{contact_id}")
-    
+
     # 5. Search Contacts by Email
     def search_by_emails(self, emails: List[str]) -> Any:
         """
@@ -101,7 +124,9 @@ class Contacts:
         return self._client.post("/contacts/search/emails", data=payload)
 
     # 6. Bulk Update Contacts
-    def bulk_update(self, contacts: List[Dict[str, Any]], run_workflow: bool = False) -> Any:
+    def bulk_update(
+        self, contacts: List[Dict[str, Any]], run_workflow: bool = False
+    ) -> Any:
         """
         Bulk update multiple contacts using /contacts/bulk-update.
 
