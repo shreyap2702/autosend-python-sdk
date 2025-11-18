@@ -49,3 +49,4 @@ coverage.xml
 .tox/
 
 test_sdk.py/
+tests/
