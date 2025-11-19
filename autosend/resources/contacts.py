@@ -270,54 +270,6 @@ class Contacts:
     # ---------------------------------------------------------
     # 5. Search Contacts by Email
     # ---------------------------------------------------------
-def get_contact(self, contact_id: str) -> Dict[str, Any]:
-    """
-    Retrieve a single contact by its unique identifier.
-    
-    Fetches contact details from the AutoSend API using the provided
-    contact ID. This method makes a GET request to the /contacts/{id}
-    endpoint.
-    
-    Args:
-        contact_id (str): The unique identifier of the contact to retrieve.
-            Must be a non-empty string.
-    
-    Returns:
-        Dict[str, Any]: A dictionary containing the contact information,
-            including fields such as name, email, phone, and other
-            contact details as defined by the API.
-    
-    Raises:
-        ValueError: If contact_id is empty or None.
-        APIError: If the API request fails or returns an error status.
-        NotFoundError: If the contact with the given ID does not exist.
-    
-    Example:
-        >>> client = AutoSendClient(api_key="your_api_key")
-        >>> contact = client.get_contact("contact_123")
-        >>> print(contact["email"])
-        'user@example.com'
-    
-    API Endpoint:
-        GET https://api.autosend.com/v1/contacts/{id}
-    
-    Note:
-        This method requires valid authentication credentials to be
-        configured in the client instance.
-    """
-    logger.info("Fetching contact with ID: %s", contact_id)
-    
-    # Validate input parameters
-    self._validate_non_empty(contact_id, "contact_id")
-    
-    # Make API request
-    endpoint = f"/contacts/{contact_id}"
-    response = self._client.get(endpoint)
-    
-    logger.debug("Successfully retrieved contact: %s", contact_id)
-    
-    return response
-
 
     def search_by_emails(self, emails: List[str]) -> Dict[str, Any]:
         """
