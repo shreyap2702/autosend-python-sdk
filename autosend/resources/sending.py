@@ -5,7 +5,7 @@ Provides methods for sending single and bulk emails via the Autosend API.
 
 import re
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from autosend.client import AutosendClient
 from autosend.errors import ValidationError
 
@@ -100,27 +100,69 @@ class Sending:
 
     #1. SEND SINGLE EMAIL
     def send_email(
-        self,
-        to_email: str,
-        to_name: str,
-        from_email: str,
-        from_name: str,
-        subject: str,
-        html: str,
-        dynamic_data: Dict[str, Any],
-        reply_to_email: str | None = None,
-        attachments: List[Dict[str, Any]] | None = None,
-        unsubscribe_url: str | None = None,
-        unsubscribe_group_id: str | None = None,
+    self,
+    to_email: str,
+    to_name: str,
+    from_email: str,
+    from_name: str,
+    subject: str,
+    html: str,
+    dynamic_data: Dict[str, Any],
+    reply_to_email: Optional[str] = None,
+    attachments: Optional[List[Dict[str, Any]]] = None,
+    unsubscribe_url: Optional[str] = None,
+    unsubscribe_group_id: Optional[str] = None,
     ) -> Any:
         """
-        Send a single email using the /mails/send endpoint.
+        Send a transactional or marketing email via the AutoSend API.
+        
+        This method sends a single email using the /mails/send endpoint. Either a
+        templateId OR html/text content must be provided. When using a template,
+        the subject is optional.
         
         Args:
-            unsubscribe_url: URL for the unsubscribe link (RFC 2369 compliant)
-            unsubscribe_group_id: Optional subscription group/category ID
+            to_email (str): Recipient's email address.
+            to_name (str): Recipient's display name.
+            from_email (str): Sender's email address.
+            from_name (str): Sender's display name.
+            subject (str): Email subject line.
+            html (str): HTML content of the email body.
+            dynamic_data (Dict[str, Any]): Dictionary containing dynamic variables
+                to be injected into the email template or content.
+            reply_to_email (Optional[str], optional): Email address for replies.
+                Defaults to None.
+            attachments (Optional[List[Dict[str, Any]]], optional): List of attachment
+                objects. Each attachment should contain required fields as per API spec.
+                Defaults to None.
+            unsubscribe_url (Optional[str], optional): RFC 2369 compliant URL for the
+                unsubscribe link. Defaults to None.
+            unsubscribe_group_id (Optional[str], optional): Subscription group or
+                category ID for managing unsubscribe preferences. Defaults to None.
+        
+        Returns:
+            Any: API response from the /mails/send endpoint.
+        
+        Raises:
+            ValidationError: If attachments, dynamic_data, or unsubscribe_url fail
+                validation checks.
+            APIError: If the API request fails.
+        
+        Example:
+            >>> client.send_email(
+            ...     to_email="user@example.com",
+            ...     to_name="John Doe",
+            ...     from_email="noreply@company.com",
+            ...     from_name="Company Name",
+            ...     subject="Welcome to our service",
+            ...     html="<h1>Welcome {{name}}!</h1>",
+            ...     dynamic_data={"name": "John"},
+            ...     reply_to_email="support@company.com",
+            ...     unsubscribe_url="https://company.com/unsubscribe"
+            ... )
+        
+        API Endpoint:
+            POST https://api.autosend.com/v1/mails/send
         """
-
         logger.info("Preparing to send a single email to %s", to_email)
 
         # Validate attachments
@@ -133,7 +175,7 @@ class Sending:
         self._validate_unsubscribe(unsubscribe_url)
 
         # Build payload
-        payload = {
+        payload: Dict[str, Any] = {
             "to": {"email": to_email, "name": to_name},
             "from": {"email": from_email, "name": from_name},
             "subject": subject,
@@ -141,9 +183,11 @@ class Sending:
             "dynamicData": dynamic_data,
         }
 
+        # Add optional reply-to address
         if reply_to_email:
             payload["replyTo"] = {"email": reply_to_email}
 
+        # Add attachments if provided
         if attachments:
             payload["attachments"] = attachments
 
@@ -159,44 +203,85 @@ class Sending:
 
         logger.debug("Single email payload validated and ready for sending.")
 
-        # Send request
+        # Send request to API
         return self._client.post("/mails/send", data=payload)
 
     #2. SEND BULK EMAIL
     def send_bulk(
-        self,
-        recipients: List[Dict[str, str]],
-        from_email: str,
-        from_name: str,
-        subject: str,
-        html: str,
-        dynamic_data: Dict[str, Any],
-        reply_to_email: str | None = None,
-        unsubscribe_url: str | None = None,
-        unsubscribe_group_id: str | None = None,
+    self,
+    recipients: List[Dict[str, str]],
+    from_email: str,
+    from_name: str,
+    subject: str,
+    html: str,
+    dynamic_data: Dict[str, Any],
+    reply_to_email: Optional[str] = None,
+    unsubscribe_url: Optional[str] = None,
+    unsubscribe_group_id: Optional[str] = None,
     ) -> Any:
         """
-        Send multiple emails using the /mails/bulk endpoint.
+        Send the same email to multiple recipients in a single API request.
+        
+        This method sends bulk emails using the /mails/bulk endpoint. All recipients
+        receive the same email content with support for dynamic data personalization.
         
         Args:
-            unsubscribe_url: URL for the unsubscribe link (RFC 2369 compliant)
-            unsubscribe_group_id: Optional subscription group/category ID
+            recipients (List[Dict[str, str]]): List of recipient dictionaries. Each must
+                contain 'email' and 'name' keys. Maximum 100 recipients per request.
+                Example: [{"email": "user@example.com", "name": "John Doe"}]
+            from_email (str): Sender's email address.
+            from_name (str): Sender's display name.
+            subject (str): Email subject line.
+            html (str): Email body in HTML format. Can include dynamic data placeholders.
+            dynamic_data (Dict[str, Any]): Dictionary of dynamic data for template
+                personalization. Keys should match placeholders in the HTML content.
+            reply_to_email (Optional[str], optional): Email address for replies. 
+                Defaults to None.
+            unsubscribe_url (Optional[str], optional): URL for the unsubscribe link
+                (RFC 2369 compliant). Defaults to None.
+            unsubscribe_group_id (Optional[str], optional): Subscription group/category
+                ID for managing unsubscribe preferences. Defaults to None.
+        
+        Returns:
+            Any: API response from the bulk email send operation.
+        
+        Raises:
+            ValidationError: If recipients list is empty, exceeds 100 recipients,
+                contains invalid recipient data, has invalid dynamic data template usage,
+                or has an invalid unsubscribe URL.
+        
+        Example:
+            >>> recipients = [
+            ...     {"email": "user1@example.com", "name": "Alice"},
+            ...     {"email": "user2@example.com", "name": "Bob"}
+            ... ]
+            >>> response = client.send_bulk(
+            ...     recipients=recipients,
+            ...     from_email="sender@example.com",
+            ...     from_name="Company Name",
+            ...     subject="Newsletter",
+            ...     html="<p>Hello {{name}}</p>",
+            ...     dynamic_data={"name": "placeholder"},
+            ...     unsubscribe_url="https://example.com/unsubscribe"
+            ... )
         """
-
         logger.info("Preparing bulk email send for %d recipients", len(recipients))
 
+        # Validate recipients list is not empty
         if not recipients:
             raise ValidationError(
                 "The recipients list must contain at least one recipient.",
                 field="recipients",
             )
 
+        # Validate recipients count does not exceed maximum
         if len(recipients) > 100:
             raise ValidationError(
                 "A maximum of 100 recipients is allowed for bulk email.",
                 field="recipients",
             )
 
+        # Validate each recipient has required fields
         for recipient in recipients:
             if "email" not in recipient or "name" not in recipient:
                 raise ValidationError(
@@ -208,9 +293,10 @@ class Sending:
         # Validate dynamic data template usage
         self._validate_dynamic_data(html, dynamic_data)
 
-        # Validate unsubscribe URL
+        # Validate unsubscribe URL format
         self._validate_unsubscribe(unsubscribe_url)
 
+        # Build request payload
         payload: Dict[str, Any] = {
             "recipients": recipients,
             "from": {"email": from_email, "name": from_name},
@@ -219,10 +305,11 @@ class Sending:
             "dynamicData": dynamic_data,
         }
 
+        # Add optional reply-to address
         if reply_to_email:
             payload["replyTo"] = {"email": reply_to_email}
 
-        # Add unsubscribe functionality
+        # Add optional unsubscribe functionality
         if unsubscribe_url or unsubscribe_group_id:
             unsubscribe_data: Dict[str, Any] = {}
             if unsubscribe_url:
@@ -234,4 +321,5 @@ class Sending:
 
         logger.debug("Bulk email payload validated and ready for sending.")
 
+        # Send bulk email request
         return self._client.post("/mails/bulk", data=payload)
