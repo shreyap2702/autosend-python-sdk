@@ -114,7 +114,3 @@ except ValidationError as e:
 except AutosendError as e:
 	print("Autosend API error:", e)
 ```
-
-## License
-
-This project does not include a license file in the repository; please add a LICENSE if you intend to publish.
