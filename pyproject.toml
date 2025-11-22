@@ -1,6 +1,6 @@
 [project]
 name = "autosend-shreya-sdk"
-version = "0.2.0"
+"version = "0.1.3""
 description = "Autosend Python SDK"
 readme = "README.md"
 authors = [
